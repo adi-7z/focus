@@ -20,3 +20,5 @@
 - visualize progress with heatmap.
 - binaural beats for focus.
 - cloud sync with google sign in.
+
+click focus to get started :)
