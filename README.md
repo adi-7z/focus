@@ -16,8 +16,8 @@
 </div>
 
 ---
-- focus timer with custom break and focus times.
-- visualize progress with heatmap.
+- a customizable focus timer!
+- track progress with a heatmap.
 - binaural beats for focus.
 - cloud sync with google sign in.
 
