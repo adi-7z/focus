@@ -1,12 +1,9 @@
 <div align="center">
-
-  # Focus
-  
-  <h3>
+  <h2>
     <a href="https://adi-7z.github.io/focus/">
       ⏲️ <b>focus</b>
     </a>
-  </h3>
+  </h2>
 
   <br />
 
