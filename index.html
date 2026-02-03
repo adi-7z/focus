@@ -109,7 +109,9 @@
             gap: 8px;
             font-weight: 500;
         }
-        .sync-dot { width: 8px; height: 8px; background-color: var(--success-color); border-radius: 50%; }
+        .sync-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .sync-dot.green { background-color: var(--success-color); }
+        .sync-dot.grey { background-color: var(--text-secondary); }
         
         .menu-btn {
             background: transparent;
@@ -124,6 +126,7 @@
         }
         .menu-btn:hover { background-color: #333; }
         .menu-btn.logout { color: var(--danger-color); }
+        .menu-btn.login { color: var(--text-primary); font-weight: 600; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -197,17 +200,28 @@
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
 
-        /* Heatmap */
+        /* Heatmap - STICKY TOOLTIP UPDATE */
         .heatmap-container {
             background-color: var(--surface-color);
             padding: 24px;
+            padding-bottom: 12px; /* Less bottom padding near text */
             border-radius: 24px;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Desktop Default */
+            align-items: center;
             max-width: 90vw;
-            overflow-x: auto;
+            /* No overflow here, we move scrolling inside */
         }
+
+        /* The scrollable area for the grid only */
+        .heatmap-scroll-area {
+            width: 100%;
+            overflow-x: auto;
+            display: flex;
+            justify-content: center; /* Center on desktop */
+            margin-bottom: 12px; /* Space between grid and tooltip */
+        }
+
         .heatmap-wrapper { display: flex; flex-direction: column; align-items: flex-start; }
         .months-container { position: relative; height: 15px; width: 100%; margin-bottom: 4px; }
         .month-label { position: absolute; font-size: 10px; color: var(--text-secondary); white-space: nowrap; }
@@ -219,7 +233,15 @@
         .level-3 { background-color: var(--level-3); }
         .level-4 { background-color: var(--level-4); }
 
-        .tooltip { margin-top: 15px; font-size: 0.85rem; color: var(--text-secondary); height: 1em; font-weight: 500; min-height: 1.2em; }
+        /* Tooltip stays outside scroll area */
+        .tooltip { 
+            font-size: 0.85rem; 
+            color: var(--text-secondary); 
+            height: 1em; 
+            font-weight: 500; 
+            min-height: 1.2em; 
+            text-align: center;
+        }
 
         /* Mobile Optimization */
         @media (max-width: 600px) {
@@ -228,18 +250,10 @@
             button.control-btn { padding: 12px 20px; font-size: 0.95rem; }
             .top-bar { top: 15px; right: 15px; }
             
-            /* FIX LEFT PADDING CUTOFF */
-            .heatmap-container { 
-                padding: 16px; 
-                width: 95vw; 
-                /* Force alignment to start so left side isn't clipped */
-                align-items: flex-start; 
-                overflow-x: auto;
-            }
-            .heatmap-wrapper {
-                /* Give it some breathing room on the left */
-                padding-left: 4px; 
-            }
+            /* Mobile: Grid aligns left to allow scrolling */
+            .heatmap-container { width: 95vw; padding: 16px; }
+            .heatmap-scroll-area { justify-content: flex-start; }
+            .heatmap-wrapper { padding-left: 4px; }
         }
     </style>
 </head>
@@ -247,17 +261,13 @@
 
     <div class="top-bar">
         <div class="profile-container">
-            <button class="icon-btn" id="login-btn" onclick="handleAuth()" title="Sign In">
+            <button class="icon-btn" id="login-icon" onclick="toggleMenu()" title="Account">
                 <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </button>
             <img id="profile-pic" class="profile-pic" src="" style="display: none;" onclick="toggleMenu()" alt="Profile">
             
             <div class="profile-menu" id="profile-menu">
-                <div class="menu-status"><div class="sync-dot"></div> Syncing</div>
-                <div class="menu-status" id="user-email" style="color: var(--text-primary); padding-top:0;">user@email.com</div>
-                <hr style="border: 0; border-top: 1px solid #333; width: 100%; margin: 4px 0;">
-                <button class="menu-btn logout" onclick="handleLogout()">Log Out</button>
-            </div>
+                </div>
         </div>
 
         <button class="icon-btn" id="music-toggle" onclick="toggleMusicPrefs()" title="Toggle Alpha Waves">
@@ -281,9 +291,11 @@
     </div>
 
     <div class="heatmap-container">
-        <div class="heatmap-wrapper">
-            <div class="months-container" id="months-labels"></div>
-            <div class="heatmap-grid" id="heatmap"></div>
+        <div class="heatmap-scroll-area">
+            <div class="heatmap-wrapper">
+                <div class="months-container" id="months-labels"></div>
+                <div class="heatmap-grid" id="heatmap"></div>
+            </div>
         </div>
         <div class="tooltip" id="tooltip">Total study time today: 0m</div>
     </div>
@@ -311,26 +323,50 @@
 
         let currentUser = null;
         
-        const loginBtn = document.getElementById('login-btn');
+        const loginIcon = document.getElementById('login-icon');
         const profilePic = document.getElementById('profile-pic');
         const profileMenu = document.getElementById('profile-menu');
-        const userEmail = document.getElementById('user-email');
+
+        // --- Render Menu Based on State ---
+        function renderMenuState() {
+            if (currentUser) {
+                // LOGGED IN STATE
+                profileMenu.innerHTML = `
+                    <div class="menu-status"><div class="sync-dot green"></div> Syncing</div>
+                    <div class="menu-status" style="color: var(--text-primary); padding-top:0;">${currentUser.email}</div>
+                    <hr style="border: 0; border-top: 1px solid #333; width: 100%; margin: 4px 0;">
+                    <button class="menu-btn logout" onclick="handleLogout()">Log Out</button>
+                `;
+                loginIcon.style.display = 'none';
+                profilePic.style.display = 'block';
+                profilePic.src = currentUser.photoURL || 'https://via.placeholder.com/36';
+            } else {
+                // LOGGED OUT STATE
+                profileMenu.innerHTML = `
+                    <div class="menu-status"><div class="sync-dot grey"></div> Not syncing</div>
+                    <hr style="border: 0; border-top: 1px solid #333; width: 100%; margin: 4px 0;">
+                    <button class="menu-btn login" onclick="handleAuth()">Log In with Google</button>
+                `;
+                loginIcon.style.display = 'block';
+                profilePic.style.display = 'none';
+            }
+        }
 
         // --- Auth Functions ---
         window.handleAuth = async () => {
+            profileMenu.classList.remove('visible'); // Close immediately
             try {
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("Login failed", error);
-                alert("Login failed. Check console.");
             }
         };
 
         window.handleLogout = async () => {
+            profileMenu.classList.remove('visible'); // Close immediately
             await signOut(auth);
-            toggleMenu(); 
             
-            // CLEAR PROGRESS FOR GUEST MODE
+            // Clear Data
             localStorage.removeItem(STORAGE_KEY);
             studyData = {}; 
             renderHeatmap(); 
@@ -348,18 +384,13 @@
         });
 
         onAuthStateChanged(auth, async (user) => {
+            currentUser = user; // Set state
+            renderMenuState(); // Update UI
+            
             if (user) {
-                currentUser = user;
-                loginBtn.style.display = 'none';
-                profilePic.style.display = 'block';
-                profilePic.src = user.photoURL || 'https://via.placeholder.com/36';
-                userEmail.textContent = user.displayName || user.email;
                 await loadCloudData();
             } else {
-                currentUser = null;
-                loginBtn.style.display = 'flex';
-                profilePic.style.display = 'none';
-                profileMenu.classList.remove('visible');
+                // Don't auto-load local here to keep logout clean
             }
         });
 
@@ -418,6 +449,7 @@
 
         // Init
         loadLocalData();
+        renderMenuState(); // Initial Render
     </script>
 
     <script>
