@@ -1,9 +1,9 @@
 <div align="center">
-  <h2>
+  <h1>
     <a href="https://adi-7z.github.io/focus/">
-      ⏲️ <b>focus</b>
+      <b>focus</b>
     </a>
-  </h2>
+  </h1>
 
   <br />
 
