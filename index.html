@@ -3,18 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Focus Timer</title>
+    <title>Focus Cloud</title>
     <style>
         :root {
-            /* Palette */
             --bg-color: #101010;
             --surface-color: #202020;
             --text-primary: #ffffff;
             --text-secondary: #8a8a8a;
             --accent-color: #e0e0e0;
-            --timer-color: #AFAFAF; /* Lower contrast for timer */
-            
-            /* Heatmap Colors */
+            --timer-color: #AFAFAF;
             --grid-empty: #1a1a1a;
             --level-1: #0e4429; 
             --level-2: #006d32;
@@ -32,41 +29,51 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            -webkit-font-smoothing: antialiased;
             overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Top Right Music Toggle */
-        .music-toggle {
+        /* Top Bar Actions */
+        .top-bar {
             position: absolute;
             top: 25px;
             right: 25px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .icon-btn {
             background: transparent;
             border: none;
             color: var(--text-secondary);
             cursor: pointer;
-            padding: 10px;
+            padding: 8px;
             border-radius: 50%;
-            transition: color 0.2s, background 0.2s;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .music-toggle:hover {
-            color: var(--text-primary);
+        .icon-btn:hover { color: var(--text-primary); background: var(--surface-color); }
+        .icon-btn svg { width: 24px; height: 24px; fill: currentColor; }
+
+        /* Auth Button */
+        #auth-btn {
+            font-size: 0.85rem;
             background: var(--surface-color);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .music-toggle svg {
-            width: 24px;
-            height: 24px;
-            fill: currentColor;
-        }
+        #auth-btn:hover { border-color: var(--text-secondary); }
+        .logged-in { border-color: var(--level-4) !important; color: var(--level-4) !important; }
 
         /* Timer Section */
-        .timer-container { 
-            text-align: center; 
-            margin-bottom: 30px; /* Reduced slightly since internal margins increased */
-        }
+        .timer-container { text-align: center; margin-bottom: 30px; }
 
         .time-display {
             font-size: 7rem;
@@ -74,9 +81,9 @@
             letter-spacing: -0.02em;
             line-height: 1;
             margin-top: 10px;
-            margin-bottom: 40px; /* Increased padding to buttons */
+            margin-bottom: 40px;
             font-variant-numeric: tabular-nums;
-            color: var(--timer-color); /* Updated Color */
+            color: var(--timer-color);
         }
 
         .status-badge {
@@ -90,14 +97,9 @@
         }
 
         /* Controls */
-        .controls { 
-            display: flex; 
-            gap: 12px; 
-            justify-content: center; 
-            margin-bottom: 30px; /* Standard gap */
-        }
+        .controls { display: flex; gap: 12px; justify-content: center; margin-bottom: 30px; }
 
-        button {
+        button.control-btn {
             background-color: var(--surface-color);
             color: var(--text-primary);
             border: none;
@@ -110,28 +112,21 @@
             transition: all 0.2s ease;
         }
 
-        button:hover { background-color: #333333; transform: translateY(-1px); }
+        button.control-btn:hover { background-color: #333333; transform: translateY(-1px); }
 
-        button.primary {
-            background-color: var(--accent-color);
-            color: var(--bg-color);
-            font-weight: 600;
-        }
-
+        button.primary { background-color: var(--accent-color); color: var(--bg-color); font-weight: 600; }
         button.primary:hover { background-color: #ffffff; opacity: 1; }
 
-        /* Settings inputs */
+        /* Settings */
         .settings {
             display: flex;
             gap: 20px;
             justify-content: center;
-            margin-bottom: 30px; /* Reduced from 50px to match controls gap */
+            margin-bottom: 30px;
             font-size: 0.9rem;
             color: var(--text-secondary);
         }
-
         .settings label { display: flex; align-items: center; gap: 8px; }
-
         input {
             background: var(--surface-color);
             border: none;
@@ -143,17 +138,12 @@
             font-family: inherit;
             font-weight: 600;
         }
-        
         input:focus { outline: 2px solid var(--accent-color); }
-
-        /* Remove Spinners */
         input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; margin: 0; 
-        }
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
 
-        /* Heatmap Section */
+        /* Heatmap */
         .heatmap-container {
             background-color: var(--surface-color);
             padding: 24px;
@@ -162,68 +152,36 @@
             flex-direction: column;
             align-items: center;
         }
-
-        .heatmap-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .months-container {
-            position: relative;
-            height: 15px;
-            width: 100%;
-            margin-bottom: 4px;
-        }
-
-        .month-label {
-            position: absolute;
-            font-size: 10px;
-            color: var(--text-secondary);
-        }
-
-        .heatmap-grid {
-            display: grid;
-            grid-template-rows: repeat(7, 10px);
-            grid-auto-flow: column;
-            gap: 4px;
-        }
-
-        .day-cell {
-            width: 10px;
-            height: 10px;
-            border-radius: 2px;
-            background-color: var(--grid-empty);
-        }
-
-        /* Heatmap Levels */
+        .heatmap-wrapper { display: flex; flex-direction: column; align-items: flex-start; }
+        .months-container { position: relative; height: 15px; width: 100%; margin-bottom: 4px; }
+        .month-label { position: absolute; font-size: 10px; color: var(--text-secondary); }
+        .heatmap-grid { display: grid; grid-template-rows: repeat(7, 10px); grid-auto-flow: column; gap: 4px; }
+        .day-cell { width: 10px; height: 10px; border-radius: 2px; background-color: var(--grid-empty); }
+        
         .level-1 { background-color: var(--level-1); }
         .level-2 { background-color: var(--level-2); }
         .level-3 { background-color: var(--level-3); }
         .level-4 { background-color: var(--level-4); }
 
-        .tooltip {
-            margin-top: 15px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            height: 1em;
-            font-weight: 500;
-        }
+        .tooltip { margin-top: 15px; font-size: 0.85rem; color: var(--text-secondary); height: 1em; font-weight: 500; }
     </style>
 </head>
 <body>
 
-    <button class="music-toggle" id="music-toggle" onclick="toggleMusicPrefs()" title="Toggle Alpha Waves (10Hz)">
-        </button>
+    <div class="top-bar">
+        <button id="auth-btn" onclick="handleAuth()">Sign In to Sync</button>
+        <button class="icon-btn" id="music-toggle" onclick="toggleMusicPrefs()" title="Toggle Alpha Waves">
+            </button>
+    </div>
 
     <div class="timer-container">
         <div class="status-badge" id="status-text">Focus</div>
         <div class="time-display" id="timer">25:00</div>
         
         <div class="controls">
-            <button class="primary" onclick="toggleTimer()" id="toggle-btn">Start</button>
-            <button onclick="resetTimer()">Reset</button>
-            <button onclick="switchMode()">Skip</button>
+            <button class="control-btn primary" onclick="toggleTimer()" id="toggle-btn">Start</button>
+            <button class="control-btn" onclick="resetTimer()">Reset</button>
+            <button class="control-btn" onclick="switchMode()">Skip</button>
         </div>
 
         <div class="settings">
@@ -240,23 +198,132 @@
         <div class="tooltip" id="tooltip">Total study time today: 0m</div>
     </div>
 
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- 1. PASTE YOUR CONFIG HERE ---
+	const firebaseConfig = {
+    		apiKey: "AIzaSyBB6ioY-lyDEO1BBG6FzHhWR9mXg7RXHIg",
+    		authDomain: "adi-7z-focus.firebaseapp.com",
+   		projectId: "adi-7z-focus",
+    		storageBucket: "adi-7z-focus.firebasestorage.app",
+    		messagingSenderId: "976912152618",
+    		appId: "1:976912152618:web:6ea0a224470c7e672b6b53",
+    		measurementId: "G-F6DEKG8WJW"
+	};
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUser = null;
+        const authBtn = document.getElementById('auth-btn');
+
+        // --- Auth Logic ---
+        window.handleAuth = async () => {
+            if (currentUser) {
+                await signOut(auth);
+                authBtn.textContent = "Sign In to Sync";
+                authBtn.classList.remove('logged-in');
+                currentUser = null;
+                // revert to local data logic if needed, or clear
+                loadLocalData(); 
+            } else {
+                try {
+                    await signInWithPopup(auth, provider);
+                } catch (error) {
+                    console.error("Login failed", error);
+                    alert("Login failed. Check console.");
+                }
+            }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                authBtn.textContent = `Syncing as ${user.displayName.split(' ')[0]}`;
+                authBtn.classList.add('logged-in');
+                await loadCloudData();
+            }
+        });
+
+        // --- Data Logic (Hybrid) ---
+        // We use a global variable 'studyData' to drive the UI.
+        // On load: we try to pull from Cloud (if logged in) or LocalStorage.
+        const STORAGE_KEY = 'study_heatmap_data';
+        let studyData = {}; 
+
+        function loadLocalData() {
+            studyData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+            renderHeatmap();
+        }
+
+        async function loadCloudData() {
+            if (!currentUser) return;
+            const userRef = doc(db, "users", currentUser.uid);
+            const docSnap = await getDoc(userRef);
+            
+            if (docSnap.exists()) {
+                studyData = docSnap.data().heatmap || {};
+                // Merge local data if needed? For now, Cloud is truth.
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(studyData)); // Cache it
+                renderHeatmap();
+            } else {
+                // First time user, save current local data to cloud
+                await setDoc(userRef, { heatmap: studyData }, { merge: true });
+            }
+        }
+
+        async function saveProgress(dateStr) {
+            // 1. Update In-Memory
+            if (!studyData[dateStr]) studyData[dateStr] = 0;
+            studyData[dateStr] += 1;
+            
+            // 2. Update Local Storage (Always backup)
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(studyData));
+
+            // 3. Update Cloud (If logged in)
+            if (currentUser) {
+                const userRef = doc(db, "users", currentUser.uid);
+                // We use dot notation to update specific map field in Firestore
+                await updateDoc(userRef, {
+                    [`heatmap.${dateStr}`]: increment(1)
+                });
+            }
+        }
+
+        // --- Make accessible to legacy JS ---
+        window.logMinuteExternally = () => {
+            const today = new Date().toISOString().split('T')[0];
+            saveProgress(today);
+            renderHeatmap();
+        }
+        
+        window.getStudyData = () => studyData;
+
+        // Load data on startup
+        loadLocalData();
+    </script>
+
     <script>
-        // --- State ---
+        // --- STANDARD JS LOGIC (UI/Audio) ---
+        
         let timeLeft = 25 * 60;
         let isRunning = false;
         let isFocusMode = true;
         let timerId = null;
         let musicEnabled = false; 
         
-        // --- Audio Context ---
+        // Audio Context
         let audioCtx;
         let leftOsc, rightOsc, gainNode;
         
-        // --- Data Persistence ---
-        const STORAGE_KEY = 'study_heatmap_data';
-        let studyData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-
-        // --- Elements ---
+        // Elements
         const timerDisplay = document.getElementById('timer');
         const statusText = document.getElementById('status-text');
         const toggleBtn = document.getElementById('toggle-btn');
@@ -264,27 +331,24 @@
         const breakInput = document.getElementById('break-input');
         const musicToggleBtn = document.getElementById('music-toggle');
 
-        // --- Icons ---
+        // Icons
         const ICON_VOL_ON = `<svg viewBox="0 0 24 24"><path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-4 0c-4.01.91-7 4.49-7 8.77s2.99 7.86 7 8.77v-2.06c-2.89-.86-5-3.54-5-6.71s2.11-5.85 5-6.71V3.23zM9 13.5h2.25l3 3V7.5l-3 3H9v3z"/></svg>`;
         const ICON_VOL_OFF = `<svg viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
 
-        // --- Core Functions ---
         function updateDisplay() {
             const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
             const s = (timeLeft % 60).toString().padStart(2, '0');
             timerDisplay.textContent = `${m}:${s}`;
-            document.title = `${m}:${s} - Focus Timer`;
+            document.title = `${m}:${s} - Focus Cloud`;
         }
 
         function toggleTimer() {
             if (isRunning) {
-                // Pause
                 clearInterval(timerId);
                 toggleBtn.textContent = "Start";
                 toggleBtn.classList.add('primary');
                 stopBinaural();
             } else {
-                // Start
                 initAudio();
                 timerId = setInterval(tick, 1000);
                 toggleBtn.textContent = "Pause";
@@ -299,7 +363,8 @@
                 timeLeft--;
                 updateDisplay();
                 if (isFocusMode && timeLeft % 60 === 0) {
-                    logMinute();
+                    // Call the module function attached to window
+                    if (window.logMinuteExternally) window.logMinuteExternally();
                 }
             } else {
                 playNotificationSound();
@@ -311,13 +376,10 @@
             clearInterval(timerId);
             isRunning = false;
             stopBinaural();
-
             toggleBtn.textContent = "Start";
             toggleBtn.classList.add('primary');
-            
             isFocusMode = !isFocusMode;
             statusText.textContent = isFocusMode ? "Focus" : "Break";
-            
             const duration = isFocusMode ? focusInput.value : breakInput.value;
             timeLeft = duration * 60;
             updateDisplay();
@@ -327,7 +389,6 @@
             clearInterval(timerId);
             isRunning = false;
             stopBinaural();
-
             toggleBtn.textContent = "Start";
             toggleBtn.classList.add('primary');
             const duration = isFocusMode ? focusInput.value : breakInput.value;
@@ -339,21 +400,15 @@
             if (!isRunning) resetTimer();
         }
 
-        // --- Audio Logic (Alpha Waves) ---
-        
+        // --- Audio Logic ---
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function toggleMusicPrefs() {
             musicEnabled = !musicEnabled;
             renderMusicButton();
-            
             if (isRunning && isFocusMode) {
                 if (musicEnabled) startBinaural();
                 else stopBinaural();
@@ -365,38 +420,31 @@
             musicToggleBtn.style.color = musicEnabled ? 'var(--text-primary)' : 'var(--text-secondary)';
         }
 
-        // Generates 10Hz Alpha Beat (140Hz Left, 150Hz Right)
         function startBinaural() {
             if (!audioCtx) initAudio();
             if (leftOsc) stopBinaural();
+            const baseFreq = 140; 
+            const beatFreq = 10; 
 
-            const baseFreq = 140; // Left Ear
-            const beatFreq = 10;  // 10Hz Beat
-
-            // Gain Node (Volume)
             gainNode = audioCtx.createGain();
-            gainNode.gain.value = 0.05; // 5% volume
+            gainNode.gain.value = 0.05; 
             gainNode.connect(audioCtx.destination);
 
-            // Left Ear
             const pannerLeft = audioCtx.createStereoPanner();
             pannerLeft.pan.value = -1;
             pannerLeft.connect(gainNode);
-            
             leftOsc = audioCtx.createOscillator();
             leftOsc.type = 'sine';
             leftOsc.frequency.value = baseFreq;
             leftOsc.connect(pannerLeft);
             leftOsc.start();
 
-            // Right Ear
             const pannerRight = audioCtx.createStereoPanner();
             pannerRight.pan.value = 1;
             pannerRight.connect(gainNode);
-
             rightOsc = audioCtx.createOscillator();
             rightOsc.type = 'sine';
-            rightOsc.frequency.value = baseFreq + beatFreq; // 150 Hz
+            rightOsc.frequency.value = baseFreq + beatFreq; 
             rightOsc.connect(pannerRight);
             rightOsc.start();
         }
@@ -406,10 +454,8 @@
                 try {
                     gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
                     setTimeout(() => {
-                        leftOsc.stop();
-                        rightOsc.stop();
-                        leftOsc = null;
-                        rightOsc = null;
+                        leftOsc.stop(); rightOsc.stop();
+                        leftOsc = null; rightOsc = null;
                     }, 100);
                 } catch(e) {}
             }
@@ -418,34 +464,28 @@
         function playNotificationSound() {
             const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
             audio.volume = 0.6;
-            audio.play().catch(e => console.log("Audio blocked or failed"));
+            audio.play().catch(e => console.log("Audio fail"));
         }
 
-        // --- Heatmap Logic ---
-        function logMinute() {
-            const today = new Date().toISOString().split('T')[0];
-            if (!studyData[today]) studyData[today] = 0;
-            studyData[today] += 1;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(studyData));
-            renderHeatmap();
-        }
-
+        // --- Heatmap UI ---
+        // Reads from window.getStudyData() which is managed by the Firebase module
         function renderHeatmap() {
             const container = document.getElementById('heatmap');
             const monthsContainer = document.getElementById('months-labels');
-            
             container.innerHTML = '';
             monthsContainer.innerHTML = '';
             
+            // Get data from the module
+            const data = window.getStudyData ? window.getStudyData() : {};
+
             const today = new Date();
             const oneYearAgo = new Date();
             oneYearAgo.setDate(today.getDate() - 365);
-
             let dayIndex = 0;
             
             for (let d = new Date(oneYearAgo); d <= today; d.setDate(d.getDate() + 1)) {
                 const dateStr = d.toISOString().split('T')[0];
-                const minutes = studyData[dateStr] || 0;
+                const minutes = data[dateStr] || 0;
                 
                 if (d.getDate() === 1 && dayIndex > 7) {
                     const label = document.createElement('div');
@@ -466,7 +506,6 @@
                 cell.onmouseover = () => {
                     document.getElementById('tooltip').textContent = `${dateStr}: ${minutes} mins`;
                 };
-                
                 container.appendChild(cell);
                 dayIndex++;
             }
