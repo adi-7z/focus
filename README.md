@@ -10,8 +10,9 @@
 
   <br />
 
+
   <p align="center">
-    <img src="https://github.com/user-attachments/assets/2480006a-e9d7-48a9-b494-fe5e781c6fe6" height="350" alt="PC Interface" />
+    <img src="https://github.com/user-attachments/assets/754e6bf4-9ae8-42f7-8feb-30051301ef3c" height="350" alt="PC Interface" />
     &nbsp;&nbsp;&nbsp;&nbsp; <img src="https://github.com/user-attachments/assets/2bd89563-ecd7-4de2-85fc-3e3f685daa55" height="350" alt="Mobile Interface" />
   </p>
 
