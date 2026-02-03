@@ -204,7 +204,7 @@
             border-radius: 24px;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: center; /* Desktop Default */
             max-width: 90vw;
             overflow-x: auto;
         }
@@ -227,7 +227,19 @@
             .controls { gap: 8px; }
             button.control-btn { padding: 12px 20px; font-size: 0.95rem; }
             .top-bar { top: 15px; right: 15px; }
-            .heatmap-container { padding: 16px; width: 95vw; justify-content: flex-start; }
+            
+            /* FIX LEFT PADDING CUTOFF */
+            .heatmap-container { 
+                padding: 16px; 
+                width: 95vw; 
+                /* Force alignment to start so left side isn't clipped */
+                align-items: flex-start; 
+                overflow-x: auto;
+            }
+            .heatmap-wrapper {
+                /* Give it some breathing room on the left */
+                padding-left: 4px; 
+            }
         }
     </style>
 </head>
@@ -321,8 +333,8 @@
             // CLEAR PROGRESS FOR GUEST MODE
             localStorage.removeItem(STORAGE_KEY);
             studyData = {}; 
-            renderHeatmap(); // Renders empty grid
-            updateTodayTotal(); // Resets label to 0m
+            renderHeatmap(); 
+            updateTodayTotal(); 
         };
 
         window.toggleMenu = () => {
@@ -348,8 +360,6 @@
                 loginBtn.style.display = 'flex';
                 profilePic.style.display = 'none';
                 profileMenu.classList.remove('visible');
-                // Don't auto-load local data here to prevent flashing old user data
-                // We let the handleLogout or page refresh handle init
             }
         });
 
@@ -404,7 +414,7 @@
             renderHeatmap();
         }
         window.getStudyData = () => studyData;
-        window.updateTodayTotal = updateTodayTotal; // Expose for renderer
+        window.updateTodayTotal = updateTodayTotal;
 
         // Init
         loadLocalData();
@@ -583,7 +593,6 @@
                 const dateStr = d.toISOString().split('T')[0];
                 const minutes = data[dateStr] || 0;
                 
-                // Month Label
                 if (d.getDate() === 1 && dayIndex > 7) {
                     const label = document.createElement('div');
                     label.className = 'month-label';
@@ -593,7 +602,6 @@
                     monthsContainer.appendChild(label);
                 }
 
-                // Grid Cell
                 const cell = document.createElement('div');
                 cell.className = 'day-cell';
                 if (minutes > 0) cell.classList.add('level-1');
@@ -601,7 +609,6 @@
                 if (minutes > 60) cell.classList.add('level-3');
                 if (minutes > 120) cell.classList.add('level-4');
                 
-                // Formatted Date: "Dec. 12 - 9 min"
                 const monthShort = d.toLocaleString('en-US', { month: 'short' });
                 const dayNum = d.getDate();
                 const hoverText = `${monthShort}. ${dayNum} - ${minutes} min`;
@@ -611,7 +618,6 @@
                     tooltip.style.color = "var(--text-primary)";
                 };
                 
-                // Revert to "Total study time today" on mouse leave
                 cell.onmouseleave = () => {
                     if (window.updateTodayTotal) window.updateTodayTotal();
                     tooltip.style.color = "var(--text-secondary)";
@@ -622,8 +628,6 @@
             }
         }
 
-        // Initialize Today Total on Load
-        // We delay slightly to ensure data is loaded
         setTimeout(() => {
             if(window.updateTodayTotal) window.updateTodayTotal();
         }, 100);
