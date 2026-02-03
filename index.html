@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Focus Cloud</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Focus</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --bg-color: #101010;
@@ -17,12 +22,17 @@
             --level-2: #006d32;
             --level-3: #26a641;
             --level-4: #39d353;
+            --danger-color: #ff4d4d;
+            --success-color: #39d353;
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
-            font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, sans-serif;
+            /* Universal Font Stack */
+            font-family: "Inter", "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -33,7 +43,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Top Bar Actions */
+        /* Top Bar & Profile */
         .top-bar {
             position: absolute;
             top: 25px;
@@ -41,6 +51,7 @@
             display: flex;
             gap: 15px;
             align-items: center;
+            z-index: 100;
         }
 
         .icon-btn {
@@ -58,27 +69,72 @@
         .icon-btn:hover { color: var(--text-primary); background: var(--surface-color); }
         .icon-btn svg { width: 24px; height: 24px; fill: currentColor; }
 
-        /* Auth Button */
-        #auth-btn {
-            font-size: 0.85rem;
-            background: var(--surface-color);
-            color: var(--text-primary);
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid transparent;
+        /* Profile Picture Styling */
+        .profile-container { position: relative; }
+        
+        .profile-pic {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
             cursor: pointer;
-            transition: all 0.2s;
+            background-color: var(--surface-color);
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+            object-fit: cover;
         }
-        #auth-btn:hover { border-color: var(--text-secondary); }
-        .logged-in { border-color: var(--level-4) !important; color: var(--level-4) !important; }
+        .profile-pic:hover { border-color: var(--text-secondary); }
+        
+        /* Dropdown Menu */
+        .profile-menu {
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background-color: var(--surface-color);
+            border-radius: 12px;
+            padding: 12px;
+            width: 200px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            gap: 8px;
+            border: 1px solid #333;
+        }
+        .profile-menu.visible { display: flex; animation: fadeIn 0.1s ease-out; }
+
+        .menu-status {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+        .sync-dot { width: 8px; height: 8px; background-color: var(--success-color); border-radius: 50%; }
+        
+        .menu-btn {
+            background: transparent;
+            color: var(--text-primary);
+            border: none;
+            text-align: left;
+            padding: 8px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .menu-btn:hover { background-color: #333; }
+        .menu-btn.logout { color: var(--danger-color); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Timer Section */
-        .timer-container { text-align: center; margin-bottom: 30px; }
+        .timer-container { text-align: center; margin-bottom: 30px; width: 100%; }
 
         .time-display {
             font-size: 7rem;
             font-weight: 600;
-            letter-spacing: -0.02em;
+            letter-spacing: -0.04em;
             line-height: 1;
             margin-top: 10px;
             margin-bottom: 40px;
@@ -111,9 +167,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-
         button.control-btn:hover { background-color: #333333; transform: translateY(-1px); }
-
         button.primary { background-color: var(--accent-color); color: var(--bg-color); font-weight: 600; }
         button.primary:hover { background-color: #ffffff; opacity: 1; }
 
@@ -137,6 +191,7 @@
             text-align: center;
             font-family: inherit;
             font-weight: 600;
+            font-size: 1rem;
         }
         input:focus { outline: 2px solid var(--accent-color); }
         input[type=number]::-webkit-inner-spin-button, 
@@ -151,12 +206,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            /* Prevent overflow on mobile */
+            max-width: 90vw;
+            overflow-x: auto;
         }
         .heatmap-wrapper { display: flex; flex-direction: column; align-items: flex-start; }
         .months-container { position: relative; height: 15px; width: 100%; margin-bottom: 4px; }
-        .month-label { position: absolute; font-size: 10px; color: var(--text-secondary); }
+        .month-label { position: absolute; font-size: 10px; color: var(--text-secondary); white-space: nowrap; }
         .heatmap-grid { display: grid; grid-template-rows: repeat(7, 10px); grid-auto-flow: column; gap: 4px; }
-        .day-cell { width: 10px; height: 10px; border-radius: 2px; background-color: var(--grid-empty); }
+        .day-cell { width: 10px; height: 10px; border-radius: 2px; background-color: var(--grid-empty); flex-shrink: 0; }
         
         .level-1 { background-color: var(--level-1); }
         .level-2 { background-color: var(--level-2); }
@@ -164,12 +222,39 @@
         .level-4 { background-color: var(--level-4); }
 
         .tooltip { margin-top: 15px; font-size: 0.85rem; color: var(--text-secondary); height: 1em; font-weight: 500; }
+
+        /* --- MOBILE OPTIMIZATION --- */
+        @media (max-width: 600px) {
+            .time-display { font-size: 20vw; margin-bottom: 30px; } /* Scales with screen width */
+            .controls { gap: 8px; }
+            button.control-btn { padding: 12px 20px; font-size: 0.95rem; }
+            .top-bar { top: 15px; right: 15px; }
+            .heatmap-container { padding: 16px; width: 95vw; }
+            /* Hide older history on mobile to fit screen if needed, or allow scroll */
+            .heatmap-container { overflow-x: scroll; justify-content: flex-start; }
+        }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <button id="auth-btn" onclick="handleAuth()">Sign In to Sync</button>
+        <div class="profile-container">
+            <button class="icon-btn" id="login-btn" onclick="handleAuth()" title="Sign In">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </button>
+            
+            <img id="profile-pic" class="profile-pic" src="" style="display: none;" onclick="toggleMenu()" alt="Profile">
+            
+            <div class="profile-menu" id="profile-menu">
+                <div class="menu-status">
+                    <div class="sync-dot"></div> Syncing
+                </div>
+                <div class="menu-status" id="user-email" style="color: var(--text-primary); padding-top:0;">user@email.com</div>
+                <hr style="border: 0; border-top: 1px solid #333; width: 100%; margin: 4px 0;">
+                <button class="menu-btn logout" onclick="handleLogout()">Log Out</button>
+            </div>
+        </div>
+
         <button class="icon-btn" id="music-toggle" onclick="toggleMusicPrefs()" title="Toggle Alpha Waves">
             </button>
     </div>
@@ -199,62 +284,80 @@
     </div>
 
     <script type="module">
-        // Import Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- 1. PASTE YOUR CONFIG HERE ---
-	const firebaseConfig = {
-    		apiKey: "AIzaSyBB6ioY-lyDEO1BBG6FzHhWR9mXg7RXHIg",
-    		authDomain: "adi-7z-focus.firebaseapp.com",
-   		projectId: "adi-7z-focus",
-    		storageBucket: "adi-7z-focus.firebasestorage.app",
-    		messagingSenderId: "976912152618",
-    		appId: "1:976912152618:web:6ea0a224470c7e672b6b53",
-    		measurementId: "G-F6DEKG8WJW"
-	};
+        // --- PASTE YOUR FIREBASE CONFIG HERE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBB6ioY-lyDEO1BBG6FzHhWR9mXg7RXHIg",
+            authDomain: "adi-7z-focus.firebaseapp.com",
+            projectId: "adi-7z-focus",
+            storageBucket: "adi-7z-focus.firebasestorage.app",
+            messagingSenderId: "976912152618",
+            appId: "1:976912152618:web:6ea0a224470c7e672b6b53",
+            measurementId: "G-F6DEKG8WJW"
+        };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
         let currentUser = null;
-        const authBtn = document.getElementById('auth-btn');
+        
+        // UI Elements
+        const loginBtn = document.getElementById('login-btn');
+        const profilePic = document.getElementById('profile-pic');
+        const profileMenu = document.getElementById('profile-menu');
+        const userEmail = document.getElementById('user-email');
 
-        // --- Auth Logic ---
+        // --- Auth Functions ---
         window.handleAuth = async () => {
-            if (currentUser) {
-                await signOut(auth);
-                authBtn.textContent = "Sign In to Sync";
-                authBtn.classList.remove('logged-in');
-                currentUser = null;
-                // revert to local data logic if needed, or clear
-                loadLocalData(); 
-            } else {
-                try {
-                    await signInWithPopup(auth, provider);
-                } catch (error) {
-                    console.error("Login failed", error);
-                    alert("Login failed. Check console.");
-                }
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("Login failed", error);
+                alert("Login failed. Check console.");
             }
         };
+
+        window.handleLogout = async () => {
+            await signOut(auth);
+            toggleMenu(); // Close menu
+            loadLocalData(); // Revert to local storage
+        };
+
+        window.toggleMenu = () => {
+            profileMenu.classList.toggle('visible');
+        };
+
+        // Click outside to close menu
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.profile-container')) {
+                profileMenu.classList.remove('visible');
+            }
+        });
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                authBtn.textContent = `Syncing as ${user.displayName.split(' ')[0]}`;
-                authBtn.classList.add('logged-in');
+                // UI Switch
+                loginBtn.style.display = 'none';
+                profilePic.style.display = 'block';
+                profilePic.src = user.photoURL || 'https://via.placeholder.com/36';
+                userEmail.textContent = user.displayName || user.email;
+                
                 await loadCloudData();
+            } else {
+                currentUser = null;
+                loginBtn.style.display = 'flex';
+                profilePic.style.display = 'none';
+                profileMenu.classList.remove('visible');
             }
         });
 
-        // --- Data Logic (Hybrid) ---
-        // We use a global variable 'studyData' to drive the UI.
-        // On load: we try to pull from Cloud (if logged in) or LocalStorage.
+        // --- Data Logic ---
         const STORAGE_KEY = 'study_heatmap_data';
         let studyData = {}; 
 
@@ -270,48 +373,40 @@
             
             if (docSnap.exists()) {
                 studyData = docSnap.data().heatmap || {};
-                // Merge local data if needed? For now, Cloud is truth.
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(studyData)); // Cache it
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(studyData));
                 renderHeatmap();
             } else {
-                // First time user, save current local data to cloud
                 await setDoc(userRef, { heatmap: studyData }, { merge: true });
             }
         }
 
         async function saveProgress(dateStr) {
-            // 1. Update In-Memory
             if (!studyData[dateStr]) studyData[dateStr] = 0;
             studyData[dateStr] += 1;
-            
-            // 2. Update Local Storage (Always backup)
             localStorage.setItem(STORAGE_KEY, JSON.stringify(studyData));
 
-            // 3. Update Cloud (If logged in)
             if (currentUser) {
                 const userRef = doc(db, "users", currentUser.uid);
-                // We use dot notation to update specific map field in Firestore
                 await updateDoc(userRef, {
                     [`heatmap.${dateStr}`]: increment(1)
                 });
             }
         }
 
-        // --- Make accessible to legacy JS ---
+        // Expose to Global Scope
         window.logMinuteExternally = () => {
             const today = new Date().toISOString().split('T')[0];
             saveProgress(today);
             renderHeatmap();
         }
-        
         window.getStudyData = () => studyData;
 
-        // Load data on startup
+        // Init
         loadLocalData();
     </script>
 
     <script>
-        // --- STANDARD JS LOGIC (UI/Audio) ---
+        // --- CORE TIMER & AUDIO LOGIC ---
         
         let timeLeft = 25 * 60;
         let isRunning = false;
@@ -319,7 +414,7 @@
         let timerId = null;
         let musicEnabled = false; 
         
-        // Audio Context
+        // Audio
         let audioCtx;
         let leftOsc, rightOsc, gainNode;
         
@@ -338,8 +433,14 @@
         function updateDisplay() {
             const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
             const s = (timeLeft % 60).toString().padStart(2, '0');
-            timerDisplay.textContent = `${m}:${s}`;
-            document.title = `${m}:${s} - Focus Cloud`;
+            const timeString = `${m}:${s}`;
+            
+            // 1. Update Timer
+            timerDisplay.textContent = timeString;
+            
+            // 2. Update Browser Tab Title Dynamically
+            const mode = isFocusMode ? "Focus" : "Break";
+            document.title = `${mode}: ${timeString}`;
         }
 
         function toggleTimer() {
@@ -363,7 +464,6 @@
                 timeLeft--;
                 updateDisplay();
                 if (isFocusMode && timeLeft % 60 === 0) {
-                    // Call the module function attached to window
                     if (window.logMinuteExternally) window.logMinuteExternally();
                 }
             } else {
@@ -468,14 +568,12 @@
         }
 
         // --- Heatmap UI ---
-        // Reads from window.getStudyData() which is managed by the Firebase module
         function renderHeatmap() {
             const container = document.getElementById('heatmap');
             const monthsContainer = document.getElementById('months-labels');
             container.innerHTML = '';
             monthsContainer.innerHTML = '';
             
-            // Get data from the module
             const data = window.getStudyData ? window.getStudyData() : {};
 
             const today = new Date();
