@@ -42,13 +42,13 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Top Bar & Profile */
+        /* Top Bar */
         .top-bar {
             position: absolute;
             top: 25px;
             right: 25px;
             display: flex;
-            gap: 15px;
+            gap: 8px; /* Slightly tighter gap between icons */
             align-items: center;
             z-index: 100;
         }
@@ -68,8 +68,13 @@
         .icon-btn:hover { color: var(--text-primary); background: var(--surface-color); }
         .icon-btn svg { width: 24px; height: 24px; fill: currentColor; }
 
-        /* Profile Picture Styling */
-        .profile-container { position: relative; }
+        /* Profile Container - Updated for Alignment */
+        .profile-container { 
+            position: relative;
+            display: flex;        /* Ensures internal items align vertically */
+            align-items: center; 
+            justify-content: center;
+        }
         
         .profile-pic {
             width: 36px;
@@ -97,6 +102,7 @@
             flex-direction: column;
             gap: 8px;
             border: 1px solid #333;
+            z-index: 101;
         }
         .profile-menu.visible { display: flex; animation: fadeIn 0.1s ease-out; }
 
@@ -200,26 +206,24 @@
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
 
-        /* Heatmap - STICKY TOOLTIP UPDATE */
+        /* Heatmap */
         .heatmap-container {
             background-color: var(--surface-color);
             padding: 24px;
-            padding-bottom: 12px; /* Less bottom padding near text */
+            padding-bottom: 12px; 
             border-radius: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
             max-width: 90vw;
-            /* No overflow here, we move scrolling inside */
         }
 
-        /* The scrollable area for the grid only */
         .heatmap-scroll-area {
             width: 100%;
             overflow-x: auto;
             display: flex;
-            justify-content: center; /* Center on desktop */
-            margin-bottom: 12px; /* Space between grid and tooltip */
+            justify-content: center;
+            margin-bottom: 12px;
         }
 
         .heatmap-wrapper { display: flex; flex-direction: column; align-items: flex-start; }
@@ -233,7 +237,6 @@
         .level-3 { background-color: var(--level-3); }
         .level-4 { background-color: var(--level-4); }
 
-        /* Tooltip stays outside scroll area */
         .tooltip { 
             font-size: 0.85rem; 
             color: var(--text-secondary); 
@@ -243,14 +246,11 @@
             text-align: center;
         }
 
-        /* Mobile Optimization */
         @media (max-width: 600px) {
             .time-display { font-size: 20vw; margin-bottom: 30px; }
             .controls { gap: 8px; }
             button.control-btn { padding: 12px 20px; font-size: 0.95rem; }
             .top-bar { top: 15px; right: 15px; }
-            
-            /* Mobile: Grid aligns left to allow scrolling */
             .heatmap-container { width: 95vw; padding: 16px; }
             .heatmap-scroll-area { justify-content: flex-start; }
             .heatmap-wrapper { padding-left: 4px; }
@@ -260,6 +260,9 @@
 <body>
 
     <div class="top-bar">
+        <button class="icon-btn" id="music-toggle" onclick="toggleMusicPrefs()" title="Toggle Alpha Waves">
+            </button>
+
         <div class="profile-container">
             <button class="icon-btn" id="login-icon" onclick="toggleMenu()" title="Account">
                 <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -269,9 +272,6 @@
             <div class="profile-menu" id="profile-menu">
                 </div>
         </div>
-
-        <button class="icon-btn" id="music-toggle" onclick="toggleMusicPrefs()" title="Toggle Alpha Waves">
-            </button>
     </div>
 
     <div class="timer-container">
@@ -327,10 +327,8 @@
         const profilePic = document.getElementById('profile-pic');
         const profileMenu = document.getElementById('profile-menu');
 
-        // --- Render Menu Based on State ---
         function renderMenuState() {
             if (currentUser) {
-                // LOGGED IN STATE
                 profileMenu.innerHTML = `
                     <div class="menu-status"><div class="sync-dot green"></div> Syncing</div>
                     <div class="menu-status" style="color: var(--text-primary); padding-top:0;">${currentUser.email}</div>
@@ -341,7 +339,6 @@
                 profilePic.style.display = 'block';
                 profilePic.src = currentUser.photoURL || 'https://via.placeholder.com/36';
             } else {
-                // LOGGED OUT STATE
                 profileMenu.innerHTML = `
                     <div class="menu-status"><div class="sync-dot grey"></div> Not syncing</div>
                     <hr style="border: 0; border-top: 1px solid #333; width: 100%; margin: 4px 0;">
@@ -352,9 +349,8 @@
             }
         }
 
-        // --- Auth Functions ---
         window.handleAuth = async () => {
-            profileMenu.classList.remove('visible'); // Close immediately
+            profileMenu.classList.remove('visible');
             try {
                 await signInWithPopup(auth, provider);
             } catch (error) {
@@ -363,10 +359,8 @@
         };
 
         window.handleLogout = async () => {
-            profileMenu.classList.remove('visible'); // Close immediately
+            profileMenu.classList.remove('visible');
             await signOut(auth);
-            
-            // Clear Data
             localStorage.removeItem(STORAGE_KEY);
             studyData = {}; 
             renderHeatmap(); 
@@ -384,14 +378,9 @@
         });
 
         onAuthStateChanged(auth, async (user) => {
-            currentUser = user; // Set state
-            renderMenuState(); // Update UI
-            
-            if (user) {
-                await loadCloudData();
-            } else {
-                // Don't auto-load local here to keep logout clean
-            }
+            currentUser = user;
+            renderMenuState();
+            if (user) await loadCloudData();
         });
 
         // --- Data Logic ---
@@ -447,9 +436,8 @@
         window.getStudyData = () => studyData;
         window.updateTodayTotal = updateTodayTotal;
 
-        // Init
         loadLocalData();
-        renderMenuState(); // Initial Render
+        renderMenuState();
     </script>
 
     <script>
@@ -471,7 +459,9 @@
         const breakInput = document.getElementById('break-input');
         const musicToggleBtn = document.getElementById('music-toggle');
 
-        const ICON_VOL_ON = `<svg viewBox="0 0 24 24"><path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-4 0c-4.01.91-7 4.49-7 8.77s2.99 7.86 7 8.77v-2.06c-2.89-.86-5-3.54-5-6.71s2.11-5.85 5-6.71V3.23zM9 13.5h2.25l3 3V7.5l-3 3H9v3z"/></svg>`;
+        // NEW ICONS: Clean Speaker (On) vs Speaker with Slash (Off)
+        // This makes them align perfectly as requested.
+        const ICON_VOL_ON = `<svg viewBox="0 0 24 24"><path d="M7 9v6h4l5 5V4l-5 5H7z"/></svg>`;
         const ICON_VOL_OFF = `<svg viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
 
         function updateDisplay() {
