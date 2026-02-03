@@ -4,7 +4,7 @@
   
   <h3>
     <a href="https://adi-7z.github.io/focus/">
-      🔴 <b>OPEN LIVE APP</b>
+      ⏲️ <b>focus</b>
     </a>
   </h3>
 
@@ -13,15 +13,12 @@
 
   <p align="center">
     <img src="https://github.com/user-attachments/assets/754e6bf4-9ae8-42f7-8feb-30051301ef3c" height="350" alt="PC Interface" />
-    &nbsp;&nbsp;&nbsp;&nbsp; <img src="https://github.com/user-attachments/assets/2bd89563-ecd7-4de2-85fc-3e3f685daa55" height="350" alt="Mobile Interface" />
+    &nbsp;&nbsp;&nbsp;&nbsp; <img src="https://github.com/user-attachments/assets/2bd89563-ecd7-4de2-85fc-3e3f685daa55" height="320" alt="Mobile Interface" />
   </p>
 
 </div>
 
 ---
-
-### Features
-
 - focus timer with custom break and focus times.
 - visualize progress with heatmap.
 - binaural beats for focus.
